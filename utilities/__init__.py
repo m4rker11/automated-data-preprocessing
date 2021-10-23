@@ -46,7 +46,7 @@ def replace_missing_data(df):
 
 def one_hot_encode(df):
     """
-    One hot encode categorical variables.
+    One hot encode categorical variables except datetimecolumns.
 
     """
     df = pd.get_dummies(df)
@@ -88,3 +88,46 @@ def preprocess_data(df):
     df = remove_outliers(df)
     df = normalize(df)
     return df
+def deleteConstantColumns(df):
+    """
+    Delete constant columns.
+    """
+    df = df.loc[:, (df != df.iloc[0]).any()]
+    return df
+def combine_first_last_name(df):
+    """
+    Combine first and last name if df has those columns.
+    """
+    if 'first_name' in df.columns and 'last_name' in df.columns:
+        df['full_name'] = df['first_name'] + ' ' + df['last_name']
+        df.drop(['first_name', 'last_name'], axis=1, inplace=True)
+    return df
+
+def drop_useless_columns(df): #like name and ID and email
+    """
+    if more than 95 percent of the values aren't repeating delete column.
+    """
+    for col in df.columns:  
+        if df[col].nunique() > 0.95 * len(df):
+            df.drop(col, axis=1, inplace=True)
+    return df
+
+def check_if_dateTime(df):
+    """
+    Check if the data is dateTime.
+    """
+    for col in df.columns:
+        if df[col].dtype == 'object':
+            try:
+                df[col] = pd.to_datetime(df[col], infer_datetime_format=True)
+            except:
+                pass
+    
+    
+    
+    dateTimeColumns = []
+    for col in df.columns:
+        if df[col].dtype == 'datetime64[ns]':
+            dateTimeColumns.append(col)
+    return df, dateTimeColumns
+    

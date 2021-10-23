@@ -9,9 +9,8 @@ def clean(args):
     """Load and clean user-supplied data."""
 
     print('CLEANING DATA....')
-
     # load data as a pandas data frame
-    df = pd.load_csv(args.filePath, missing_headers=args.missing)
+    df = pd.read_csv(args.filePath)
 
     # interpolate missing data values
     if args.interpolate or args.all:
@@ -28,13 +27,21 @@ def clean(args):
         df = normalize(df)
 
     # one-hot encode the categorical variables
+    
+
+    # delete useless columns
+    if args.all:
+        print('\tDeleting useless columns...')
+        df = combine_first_last_name(df)
+        df = drop_useless_columns(df)
+        df, date = check_if_dateTime(df)
+    # save cleaned data file to same directory as uncleaned version
+    
+
     if args.categorical or args.all:
         print('\tTransforming categorical data using one-hot encoding...')
         df = one_hot_encode(df)
-
-    # save cleaned data file to same directory as uncleaned version
-    df.to_csv(args.filePath[:-5] + '_CLEAN.csv')
-
+    df.to_csv(args.filePath[:-4] + '_CLEAN.csv')
     print('DONE.')
 
 def add_args(parser):
@@ -52,6 +59,7 @@ def main():
     parser = argparse.ArgumentParser(description=text.description)
     add_args(parser)
     args = parser.parse_args()
+    print(args)
     clean(args) # clean data according to user-supplied options
 
 if __name__ == '__main__':
