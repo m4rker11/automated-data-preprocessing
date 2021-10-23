@@ -1,15 +1,13 @@
-# utility functions for data preprocessing
-
-from numpy import nan, zeros
-from pandas import read_csv, get_dummies, Series
+import pandas as pd
+import numpy as np
 
 def load_csv(filePath, missing_headers=False):
     """Read data as csv and return as pandas data frame."""
 
     if missing_headers:
-        data = read_csv(filePath, header=None)
+        data = pd.read_csv(filePath, header=None)
     else:
-        data = read_csv(filePath, header=0)
+        data = pd.read_csv(filePath, header=0)
 
     # make shape of data frame global
     global rows, cols
@@ -17,69 +15,76 @@ def load_csv(filePath, missing_headers=False):
 
     return data
 
-def one_hot_encode(data):
-    """Perform a one-hot encoding and return as pandas data frame."""
+def fill_empty_with_nan(df):
+    """
+    Fill empty values with NaN.
+    """
+    for col in df.columns:
+        if df[col].dtype == 'object':
+            df[col].fillna(np.nan, inplace=True)
+    return df
 
-    return get_dummies(data)
+def drop_missing_data(df):
+    """
+    if more than 2 fields are missing drop the row.
+    if more than half of the fields are missing drop the column.
+    """
+    df.dropna(axis=0, thresh=2, inplace=True)
+    df.dropna(axis=1, thresh=0.5, inplace=True)
 
-def replace_missing_data(data):
-    """replace missing data values and return as pandas data frame."""
+    return df
 
-    # strip whitespace from data
-    data = data.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
+def replace_missing_data(df):
+    """
+    Replace missing numerical data with the median for each column.
 
-    # replace missing values with the sentinel NaN value
-    data = data.replace('?', nan)
+    """
+    for col in df.columns:
+        if df[col].dtype == 'float64' or df[col].dtype == 'int64':
+            df[col].fillna(df[col].median(), inplace=True)
+    return df
 
-    # get missing field count
-    nan_vals = dict(data.count(axis=1))
-    nan_vals = {key: value for (key, value) in nan_vals.items() if value < cols-2}
+def one_hot_encode(df):
+    """
+    One hot encode categorical variables.
 
-    # remove samples with more than one missing field
-    data = data.drop(index=nan_vals.keys())
-
-    return data
-
-def interpolate_missing_data(data, real, discrete):
-    """Interpolate missing data and return as pandas data frame."""
-
-    # get mean of real-valued fields and mode for categorical fields
-    mode = data.mode().values.flatten()
-    mean = data.mean().values.flatten()
-
-    # keep ONLY the categorical modes
-    mode = [x for x in mode.copy() if type(x) == str]
-
-    replacements = list(zeros(15))
-
-    # get mean replacements for continuous fields
-    j = 0
-    for index in real:
-        replacements[index] = mean[j]
-        j += 1
-
-    # get mode replacements for discrete fields
-    j = 0
-    for index in discrete:
-        replacements[index] = mode[j]
-        j += 1
-
-    # fill NaN values with mode (discrete fields) and mean (continuous fields)
-    data = data.fillna(Series(replacements))
-
-    return data
-
-def remove_outliers(data, real):
-    """Remove outliers from data and return as a pandas data frame."""
-
-    # get field mean and std for real-valued fields
-    mean = data.describe().iloc[1, :]
-    std = data.describe().iloc[2, :]
-
-    # remove outliers
-    for (real, mean, std) in zip(real, mean, std):
-        data = data[data[real] < 3*std + mean]
-
-    return data
+    """
+    df = pd.get_dummies(df)
+    return df
 
 
+def remove_outliers(df):
+    """
+    Remove outliers from the data.
+
+    """
+    for col in df.columns:
+        if df[col].dtype == 'float64' or df[col].dtype == 'int64':
+            q1 = df[col].quantile(0.25)
+            q3 = df[col].quantile(0.75)
+            iqr = q3 - q1
+            lower_bound = q1 - (iqr * 1.5)
+            upper_bound = q3 + (iqr * 1.5)
+            df = df[(df[col] > lower_bound) & (df[col] < upper_bound)]
+    return df
+
+def normalize(df):
+    """
+    Normalize the data.
+    """
+    for col in df.columns:
+        if df[col].dtype == 'float64' or df[col].dtype == 'int64':
+            df[col] = (df[col] - df[col].min()) / (df[col].max() - df[col].min())
+    return df
+
+def preprocess_data(df):
+    """
+    Preprocess the data.
+    """
+    df = fill_empty_with_nan(df)
+    df = drop_missing_data(df)
+    df = replace_missing_data(df)
+    df = one_hot_encode(df)
+    df = remove_outliers(df)
+    df = normalize(df)
+    return df

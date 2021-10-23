@@ -1,7 +1,3 @@
-# make_clean is a command line utility program that automatically
-# performs common data preprocessing tasks on your uncleaned data sets.
-# Author: Matthew D. Kearns
-# Usage: python make_clean.py [options] filePath
 
 import argparse
 import text
@@ -15,23 +11,21 @@ def clean(args):
     print('CLEANING DATA....')
 
     # load data as a pandas data frame
-    df = load_csv(args.filePath, missing_headers=args.missing)
-
-    # get lists of fields that are continuous and discrete
-    real = [i for i in range(len(df.iloc[0])) if type(df.iloc[0, i]) != str]
-    discrete = [i for i in range(len(df.iloc[0])) if type(df.iloc[0, i]) == str]
+    df = pd.load_csv(args.filePath, missing_headers=args.missing)
 
     # interpolate missing data values
     if args.interpolate or args.all:
         print('\tDetecting missing values...')
-        df = replace_missing_data(df)
+        df = fill_empty_with_nan(df)
         print('\tImputing missing values...')
-        df = interpolate_missing_data(df, real, discrete)
+        df = replace_missing_data(df)
+        df = drop_missing_data(df)
 
     # detect and remove outliers
     if args.outliers or args.all:
         print('\tRemoving outliers...')
-        df = remove_outliers(df, real)
+        df = remove_outliers(df)
+        df = normalize(df)
 
     # one-hot encode the categorical variables
     if args.categorical or args.all:
