@@ -47,7 +47,7 @@ def replace_missing_data(df):
 def one_hot_encode(df):
     """
     One hot encode categorical variables except datetimecolumns.
-
+    Done Last
     """
     df = pd.get_dummies(df)
     return df
@@ -55,22 +55,19 @@ def one_hot_encode(df):
 
 def remove_outliers(df):
     """
-    Remove outliers from the data.
+    Remove outliers from the data. 
 
     """
     for col in df.columns:
         if df[col].dtype == 'float64' or df[col].dtype == 'int64':
-            q1 = df[col].quantile(0.25)
-            q3 = df[col].quantile(0.75)
-            iqr = q3 - q1
-            lower_bound = q1 - (iqr * 1.5)
-            upper_bound = q3 + (iqr * 1.5)
-            df = df[(df[col] > lower_bound) & (df[col] < upper_bound)]
+            df[col] = df[col].clip(lower=df[col].quantile(0.05), upper=df[col].quantile(0.95))
     return df
+   
 
 def normalize(df):
     """
     Normalize the data.
+    Only after checking for dateTime.
     """
     for col in df.columns:
         if df[col].dtype == 'float64' or df[col].dtype == 'int64':
@@ -79,7 +76,8 @@ def normalize(df):
 
 def preprocess_data(df):
     """
-    Preprocess the data.
+    Preprocess the data. 
+    Not used in the final version.
     """
     df = fill_empty_with_nan(df)
     df = drop_missing_data(df)

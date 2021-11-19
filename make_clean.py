@@ -1,6 +1,5 @@
 
 import argparse
-import text
 import numpy as np
 import pandas as pd
 from utilities import *
@@ -10,7 +9,7 @@ def clean(args):
 
     print('CLEANING DATA....')
     # load data as a pandas data frame
-    df = pd.read_csv(args.filePath)
+    df = pd.read_csv(args.filePath, low_memory=False)
 
     # interpolate missing data values
     if args.interpolate or args.all:
@@ -41,26 +40,27 @@ def clean(args):
     if args.categorical or args.all:
         print('\tTransforming categorical data using one-hot encoding...')
         df = one_hot_encode(df)
-    df.to_csv(args.filePath[:-4] + '_CLEAN.csv')
+    df.to_csv(args.filePath[:-4] + '_CLEANED.csv')
     print('DONE.')
+    return df
 
 def add_args(parser):
     """Add command line options for customized data preprocessing."""
     parser.add_argument('filePath', metavar='filePath', type=str, help='Path to uncleaned data file')
-    parser.add_argument('-a', '--all', action='store_const', const='a', help=text.options['-a'])
-    parser.add_argument('-c', '--categorical', action='store_const', const='c', help=text.options['-c'])
-    parser.add_argument('-i', '--interpolate', action='store_const', const='i', help=text.options['-i'])
-    parser.add_argument('-m', '--missing', action='store_const', const='m', help=text.options['-m'])
-    parser.add_argument('-o', '--outliers', action='store_const', const='o', help=text.options['-o'])
+    parser.add_argument('-a', '--all', action='store_const', const='a')
+    parser.add_argument('-c', '--categorical', action='store_const', const='c')
+    parser.add_argument('-i', '--interpolate', action='store_const', const='i')
+    parser.add_argument('-m', '--missing', action='store_const', const='m')
+    parser.add_argument('-o', '--outliers', action='store_const', const='o')
     parser.add_argument('-v', '--version', action='version', version='v1.0.0')
 
 def main():
     """Create command line argument parser and call clean for preprocessing."""
-    parser = argparse.ArgumentParser(description=text.description)
+    parser = argparse.ArgumentParser()
     add_args(parser)
     args = parser.parse_args()
     print(args)
-    clean(args) # clean data according to user-supplied options
-
+    df = clean(args) # clean data according to user-supplied options
+    # CorrelationMatrixPlot(df)
 if __name__ == '__main__':
     main()
