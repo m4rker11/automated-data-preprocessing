@@ -1,19 +1,19 @@
 import pandas as pd
 import numpy as np
 
-def load_csv(filePath, missing_headers=False):
-    """Read data as csv and return as pandas data frame."""
+# def load_csv(filePath, missing_headers=False):
+#     """Read data as csv and return as pandas data frame."""
 
-    if missing_headers:
-        data = pd.read_csv(filePath, header=None)
-    else:
-        data = pd.read_csv(filePath, header=0)
+#     if missing_headers:
+#         data = pd.read_csv(filePath, header=None)
+#     else:
+#         data = pd.read_csv(filePath, header=0)
 
-    # make shape of data frame global
-    global rows, cols
-    rows, cols = data.shape
+#     # make shape of data frame global
+#     global rows, cols
+#     rows, cols = data.shape
 
-    return data
+#     return data
 
 def fill_empty_with_nan(df):
     """
@@ -86,7 +86,7 @@ def preprocess_data(df):
     df = remove_outliers(df)
     df = normalize(df)
     return df
-def deleteConstantColumns(df):
+def delete_constant_columns(df):
     """
     Delete constant columns.
     """
