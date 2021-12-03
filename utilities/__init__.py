@@ -15,6 +15,28 @@ import numpy as np
 
 #     return data
 
+def autoconverter(file, filename):
+    # if json convert to csv
+    ext = filename.split('.')[-1]
+    if ext in ['json', 'csv', 'xlsx', 'xls', 'pickle', 'sql']:
+        if filename.endswith('.json'):
+            df = pd.read_json(file)
+        elif filename.endswith('.sql'):
+            df = pd.read_sql(file)
+        elif filename.endswith('.csv'):
+            df = pd.read_csv(file)
+        elif filename.endswith('.xlsx'):
+            df = pd.read_excel(file)
+        elif filename.endswith('.xls'):
+            df = pd.read_excel(file)
+        elif filename.endswith('.pickle'):
+            df = pd.read_pickle(file)
+        return df
+    else:
+        return pd.DataFrame()
+    
+    
+
 def fill_empty_with_nan(df):
     """
     Fill empty values with NaN.
@@ -64,28 +86,7 @@ def remove_outliers(df):
     return df
    
 
-def normalize(df):
-    """
-    Normalize the data.
-    Only after checking for dateTime.
-    """
-    for col in df.columns:
-        if df[col].dtype == 'float64' or df[col].dtype == 'int64':
-            df[col] = (df[col] - df[col].min()) / (df[col].max() - df[col].min())
-    return df
 
-def preprocess_data(df):
-    """
-    Preprocess the data. 
-    Not used in the final version.
-    """
-    df = fill_empty_with_nan(df)
-    df = drop_missing_data(df)
-    df = replace_missing_data(df)
-    df = one_hot_encode(df)
-    df = remove_outliers(df)
-    df = normalize(df)
-    return df
 def delete_constant_columns(df):
     """
     Delete constant columns.
@@ -108,6 +109,15 @@ def drop_useless_columns(df): #like name and ID and email
     for col in df.columns:  
         if df[col].nunique() > 0.95 * len(df):
             df.drop(col, axis=1, inplace=True)
+    return df
+
+def normalize(df):
+    """
+    Normalize data.
+    """
+    for col in df.columns:
+        if df[col].dtype == 'float64':
+            df[col] = (df[col] - df[col].min()) / (df[col].max() - df[col].min())
     return df
 
 def check_if_dateTime(df):
